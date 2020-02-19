@@ -22,7 +22,7 @@ module FastJsonapi
                       :cached,
                       :data_links,
                       :meta_to_serialize,
-                      :root_key
+                      :root_override
       end
     end
 

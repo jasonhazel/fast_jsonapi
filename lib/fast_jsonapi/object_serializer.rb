@@ -42,13 +42,13 @@ module FastJsonapi
     alias_method :to_hash, :serializable_hash
 
     def hash_for_one_record
-      serializable_hash = { self.class.root_key => nil }
+      serializable_hash = { root_key => nil }
       serializable_hash[:meta] = @meta if @meta.present?
       serializable_hash[:links] = @links if @links.present?
 
       return serializable_hash unless @resource
 
-      serializable_hash[self.class.root_key] = self.class.record_hash(@resource, @fieldsets[self.class.record_type.to_sym], @includes, @params)
+      serializable_hash[root_key] = self.class.record_hash(@resource, @fieldsets[self.class.record_type.to_sym], @includes, @params)
       serializable_hash[:included] = self.class.get_included_records(@resource, @includes, @known_included_objects, @fieldsets, @params) if @includes.present?
       serializable_hash
     end
@@ -64,7 +64,7 @@ module FastJsonapi
         included.concat self.class.get_included_records(record, @includes, @known_included_objects, @fieldsets, @params) if @includes.present?
       end
 
-      serializable_hash[self.class.root_key] = data
+      serializable_hash[root_key] = data
       serializable_hash[:included] = included if @includes.present?
       serializable_hash[:meta] = @meta if @meta.present?
       serializable_hash[:links] = @links if @links.present?
@@ -81,6 +81,10 @@ module FastJsonapi
     alias_method :to_json, :serialized_json
 
     private
+
+    def root_key
+      self.class.root_override || :data
+    end
 
     def process_options(options)
       @fieldsets = deep_symbolize(options[:fields].presence || {})
@@ -172,7 +176,7 @@ module FastJsonapi
       end
 
       def set_root(name = nil)
-        self.root_key = name.try(:to_sym) || :data
+        self.root_override = name.try(:to_sym) || :data
       end
 
       def set_type(type_name)
