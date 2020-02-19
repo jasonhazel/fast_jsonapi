@@ -42,13 +42,13 @@ module FastJsonapi
     alias_method :to_hash, :serializable_hash
 
     def hash_for_one_record
-      serializable_hash = { data: nil }
+      serializable_hash = { self.class.root_key => nil }
       serializable_hash[:meta] = @meta if @meta.present?
       serializable_hash[:links] = @links if @links.present?
 
       return serializable_hash unless @resource
 
-      serializable_hash[:data] = self.class.record_hash(@resource, @fieldsets[self.class.record_type.to_sym], @includes, @params)
+      serializable_hash[self.class.root_key] = self.class.record_hash(@resource, @fieldsets[self.class.record_type.to_sym], @includes, @params)
       serializable_hash[:included] = self.class.get_included_records(@resource, @includes, @known_included_objects, @fieldsets, @params) if @includes.present?
       serializable_hash
     end
@@ -64,7 +64,7 @@ module FastJsonapi
         included.concat self.class.get_included_records(record, @includes, @known_included_objects, @fieldsets, @params) if @includes.present?
       end
 
-      serializable_hash[:data] = data
+      serializable_hash[self.class.root_key] = data
       serializable_hash[:included] = included if @includes.present?
       serializable_hash[:meta] = @meta if @meta.present?
       serializable_hash[:links] = @links if @links.present?
@@ -169,6 +169,10 @@ module FastJsonapi
       def use_hyphen
         warn('DEPRECATION WARNING: use_hyphen is deprecated and will be removed from fast_jsonapi 2.0 use (set_key_transform :dash) instead')
         set_key_transform :dash
+      end
+
+      def set_root(name = nil)
+        self.root_key = name.try(:to_sym) || :data
       end
 
       def set_type(type_name)
